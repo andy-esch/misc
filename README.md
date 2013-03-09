@@ -1,0 +1,1 @@
+An attempt to streamline some of the checking for new ports in MacPorts
