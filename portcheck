@@ -1,0 +1,97 @@
+#!/bin/sh
+
+# Checks MacPorts for currently installed ports that have available upgrades
+
+showInactivePorts() {
+    inactivePorts = $(port echo inactive)
+
+    if [ -n "$inactivePorts" ] # if string is not empty
+    then
+        printf "The following installed ports are inactive:\n"
+        printf "$inactivePorts\n"
+    fi
+}
+
+printHelp() {
+    printf "portcheck usage:\n                      "
+    printf "    portcheck [options]\n               "
+    printf "    options:\n                          "
+    printf "      sip    show inactive ports\n      "
+    printf "      ph     print this help message\n  "
+    printf "      iop    install outdated ports\n   "
+    printf "      help   print this message\n       "
+}
+
+upgradeOutdatedPorts() {
+    printf "Upgrade outdated ports? (enter yes or no)\n"
+    read x
+    if [ "$x" == "yes" ]; then
+        printf "Upgrading outdated ports:\n"
+        sudo port upgrade outdated
+    fi
+
+    filename="/Users/"$(whoami)"/installed_ports.txt"
+    if [ -e "$filename" ]; then
+        rm $filename
+    fi
+    touch $filename
+    echo "Installed ports as of "$(date) > $filename
+    port -v installed >> $filename
+}
+
+printOutdatedPorts() {
+    a=$(sudo port selfupdate)
+    currver=$(echo $a | sed 's/.*\([1-9]\.[0-9]\.[0-9]\) installed.*/\1/')
+    newver=$(echo $a | sed 's/.*\([1-9]\.[0-9]\.[0-9]\) downloaded.*/\1/')
+
+    if [ "$currver" != "$newver" ]; then
+        echo "New version of MacPorts installed ("$newver")."
+    fi
+
+    newports=$(port outdated)
+
+    if [ "$newports" == "No installed ports are outdated." ]; then
+        printf ""
+    else
+        printf "$newports\n"
+        b=$(port echo outdated | wc -l)
+        c=1
+        # bleep for each out-of-date port
+#        while [ $c -le $b ]; do
+#            printf "\a"
+#            sleep 1
+#            (( c++ ))
+#        done
+        printf "\n"
+    fi
+}
+
+# Main part of script
+currDate=$(date "+%s")
+lastDate=$(cat ~/portcheckLastDate.txt)
+
+# Prenvent too-frequent portchecks (every 2 hours = 7200 seconds)
+if (( $currDate <= $(expr $lastDate + 7200) && $# < 1 )); then
+	printf "Whoops! You're updating too soon!!\n"
+else
+	if [ -f ~/portcheckLastDate.txt ]; then
+		echo $currDate > ~/portcheckLastDate.txt
+		printf "\aBING BING\a"
+	fi
+
+	if [ "$1" == "-h" ] || [ "$1" == "help" ]; then
+			printHelp
+	elif [ $# -lt 1 ] || [ "$1" == "bypass" ]; then
+			printOutdatedPorts
+	elif [ "$1" == "sip" ]; then
+		showInactivePorts
+	elif [ "$1" == "ph" ]; then
+		printHelp
+	elif [ "$1" == "uop" ]; then
+		upgradeOutdatedPorts
+	elif [ "$1" == "test" ]; then
+		echo "read a now: "
+		read a
+		echo $a
+	fi
+fi
