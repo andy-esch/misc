@@ -2,8 +2,14 @@
 
 # Checks MacPorts for currently installed ports that have available upgrades
 
+# v1.2.1
+#  Added check if last run file exists
+# v1.2.0
+#  Added too-frequent running of portcheck
+# v1.1.0
+
 showInactivePorts() {
-    inactivePorts = $(port echo inactive)
+    inactivePorts=$(port echo inactive)
 
     if [ -n "$inactivePorts" ] # if string is not empty
     then
@@ -13,13 +19,13 @@ showInactivePorts() {
 }
 
 printHelp() {
-    printf "portcheck usage:\n                      "
-    printf "    portcheck [options]\n               "
-    printf "    options:\n                          "
-    printf "      sip    show inactive ports\n      "
-    printf "      ph     print this help message\n  "
-    printf "      iop    install outdated ports\n   "
-    printf "      help   print this message\n       "
+    printf "portcheck usage:\n"
+    printf "    portcheck [options]\n"
+    printf "    options:\n"
+    printf "      sip    show inactive ports\n"
+    printf "      ph     print this help message\n"
+    printf "      iop    install outdated ports\n"
+    printf "      help   print this message\n"
 }
 
 upgradeOutdatedPorts() {
@@ -38,6 +44,7 @@ upgradeOutdatedPorts() {
     echo "Installed ports as of "$(date) > $filename
     port -v installed >> $filename
 }
+
 
 printOutdatedPorts() {
     a=$(sudo port selfupdate)
@@ -68,21 +75,32 @@ printOutdatedPorts() {
 
 # Main part of script
 currDate=$(date "+%s")
-lastDate=$(cat ~/portcheckLastDate.txt)
+lastDateFile=$(echo $HOME"/portcheckLastDate.txt")
+
+# Check if lastDateFile exists
+if [ -f $lastDateFile ]; then
+    printf ""
+else
+    touch $lastDateFile
+    echo "0" > $lastDateFile
+fi
+
+# Store last date accessed
+lastDate=$(cat $lastDateFile)
 
 # Prenvent too-frequent portchecks (every 2 hours = 7200 seconds)
-if (( $currDate <= $(expr $lastDate + 7200) && $# < 1 )); then
+if (( $currDate <= $(expr $lastDate + 7200) && $# < 1 )) && [ $# -lt 1 ]; then
 	printf "Whoops! You're updating too soon!!\n"
 else
-	if [ -f ~/portcheckLastDate.txt ]; then
-		echo $currDate > ~/portcheckLastDate.txt
-		printf "\aBING BING\a"
-	fi
 
-	if [ "$1" == "-h" ] || [ "$1" == "help" ]; then
-			printHelp
+	if [ "$1" == "-h" ] || [ "$1" == "help" ] || [ "$1" == "--h" ]; then
+        printHelp
 	elif [ $# -lt 1 ] || [ "$1" == "bypass" ]; then
-			printOutdatedPorts
+        if [ -f $lastDateFile ]; then
+            echo $currDate > $lastDateFile
+            printf "Updated date file\n"
+        fi
+        printOutdatedPorts
 	elif [ "$1" == "sip" ]; then
 		showInactivePorts
 	elif [ "$1" == "ph" ]; then
@@ -93,5 +111,7 @@ else
 		echo "read a now: "
 		read a
 		echo $a
+    else
+        echo "'$1' is not an option"
 	fi
 fi
