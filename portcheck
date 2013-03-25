@@ -34,6 +34,8 @@ upgradeOutdatedPorts() {
     if [ "$x" == "yes" ]; then
         printf "Upgrading outdated ports:\n"
         sudo port upgrade outdated
+    else
+        printf "'yes' not entered.  Ports will not be upgraded."
     fi
 
     filename="/Users/"$(whoami)"/installed_ports.txt"
@@ -61,8 +63,8 @@ printOutdatedPorts() {
         printf ""
     else
         printf "$newports\n"
-        b=$(port echo outdated | wc -l)
-        c=1
+#        b=$(port echo outdated | wc -l)
+#        c=1
         # bleep for each out-of-date port
 #        while [ $c -le $b ]; do
 #            printf "\a"
@@ -73,9 +75,10 @@ printOutdatedPorts() {
     fi
 }
 
-# Main part of script
+# Main section of script
+
 currDate=$(date "+%s")
-lastDateFile=$(echo $HOME"/portcheckLastDate.txt")
+lastDateFile=$HOME"/portcheckLastDate.txt"
 
 # Check if lastDateFile exists
 if [ -f $lastDateFile ]; then
