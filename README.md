@@ -1,1 +1,1 @@
-An attempt to streamline some of the checking for new ports in MacPorts
+An attempt to streamline some of the checking for new ports in MacPorts and learn/play with shell scripting
