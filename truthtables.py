@@ -182,24 +182,49 @@ if  __name__ == '__main__':
 # Take in expression, break up using list(expr)
 # 
 # e = ['a', '&', 'b'] translate to ['&','a','b']
-def infix_to_postfix(e):
+def infix_to_pretfix(e):
     "Translates an infix string to a postfix list"
 #   a&b: [a,&,b] -> [a,b,&]
 #   a|!c: [a,|,!,c]  -> [a,c,!,|]
 #   
+# Basic Idea:
+#   expr = 'a&b'
+#   ops = ['&','|','!']
+#   temp = []
+#   for x in expr:
+#       if x in ops:
+#           temp.append(x)
+#
+#
+#
     bin_ops = ['|','&']
     un_ops = ['!']
     operands = []
     op = None
 
+    prefix = []
+    temp = None
+
     for x in e:
-        if x in bin_ops:
-            op = x
+        if x in bin_ops and temp != None:
+            prefix.append(x)
+            prefix.append(temp)
+            temp = None
+        elif len(prefix) == len(e) - 1:
+            prefix.append(x)
         else:
-            operands.append(x)
+            temp = x
     
-    operands.append(op) # In potfix notation
-    return operands
+    return prefix
+
+#    for x in e:
+#        if x in bin_ops:
+#            op = x
+#        else:
+#            operands.append(x)
+#
+#    operands.append(op) # In potfix notation
+#    return operands
 
 def postfix_exec(e, debug=False):
     "Take in broken up expression (list(expr)) in postfix order, and evaluate it as T/F"
@@ -243,6 +268,7 @@ def postfix_exec(e, debug=False):
         return None
 
 # Look into tokenization? https://docs.python.org/2/library/tokenize.html
+
 
 
 
