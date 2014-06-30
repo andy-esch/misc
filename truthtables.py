@@ -235,8 +235,14 @@ def postfix_exec(e, debug=False):
                 print "*** Error, stack is empty."
     
     if debug: print "Final result: postfix(%s) = %s" % (e, stack)
-    return stack[0]
-# 
+
+    if len(stack) == 1:
+        return stack[0]
+    else:
+        print "*** Error: stack is empty, no value is being returned"
+        return None
+
+# Look into tokenization? https://docs.python.org/2/library/tokenize.html
 
 
 
