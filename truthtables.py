@@ -161,8 +161,15 @@ def test():
     assert postfix_exec([False,True,'&']) == False
     assert postfix_exec([False,False,'&']) == False
 
-    assert postfix_exec(['!',True,False,'|']) == False
-        
+    assert postfix_exec([True,'!',False,'|']) == False
+
+    # infix_to_prefix()
+    assert infix_to_prefix('a|b') == ['|','a','b']
+    assert infix_to_prefix('a&b') == ['&','a','b']
+    assert infix_to_prefix('!a|b') == ['|','!','a','b']
+    assert infix_to_prefix('a|!b') == ['|','a','!','b']
+    assert infix_to_prefix('a&!b') == ['&','a','!','b']
+    
     return True
 
 if  __name__ == '__main__':
@@ -182,7 +189,7 @@ if  __name__ == '__main__':
 # Take in expression, break up using list(expr)
 # 
 # e = ['a', '&', 'b'] translate to ['&','a','b']
-def infix_to_pretfix(e):
+def infix_to_prefix(e):
     "Translates an infix string to a postfix list"
 #   a&b: [a,&,b] -> [a,b,&]
 #   a|!c: [a,|,!,c]  -> [a,c,!,|]
@@ -194,26 +201,25 @@ def infix_to_pretfix(e):
 #   for x in expr:
 #       if x in ops:
 #           temp.append(x)
-#
-#
-#
+
     bin_ops = ['|','&']
     un_ops = ['!']
     operands = []
     op = None
 
     prefix = []
-    temp = None
+    temp = []
 
-    for x in e:
-        if x in bin_ops and temp != None:
-            prefix.append(x)
-            prefix.append(temp)
-            temp = None
-        elif len(prefix) == len(e) - 1:
-            prefix.append(x)
+    for i in range(len(e)):
+        if e[i] in bin_ops and len(temp) != 0:
+            prefix.append(e[i])
+            prefix += temp
+            temp = []
+        elif i == len(e) - 1:
+            temp.append(e[i])
+            prefix += temp
         else:
-            temp = x
+            temp.append(e[i])
     
     return prefix
 
@@ -225,6 +231,11 @@ def infix_to_pretfix(e):
 #
 #    operands.append(op) # In potfix notation
 #    return operands
+# def infix_to_prefix(e)
+#   if len(e) == 1:
+#       return e
+#   else:
+#       
 
 def postfix_exec(e, debug=False):
     "Take in broken up expression (list(expr)) in postfix order, and evaluate it as T/F"
@@ -255,7 +266,6 @@ def postfix_exec(e, debug=False):
                 first = stack.pop()
                 result = np.logical_not(first)
                 stack.append(result)
-
             else:
                 print "*** Error, stack is empty."
     
