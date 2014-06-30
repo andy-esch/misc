@@ -1,7 +1,7 @@
 '''
 truthtables.py
 This script turns a logical expression written in the form a,b,c,... = T/F (binary) 
-variable, and & = AND, v = OR, ~ = NOT, X = XOR, etc.
+variable, and & = AND, | = OR, ! = NOT, X = XOR, etc.
 
 '''
 
@@ -20,7 +20,7 @@ def separate_values(logexp, debug=False):
     '''
     Take in logical expression (string) and output all subexpressions as a list
     '''
-    nlogexp = logexp
+    nlogexp = logexp # make copy
 
     # Convert operators to more usable forms
     nlogexp = re.sub('\&','A',nlogexp)  # AND
@@ -54,6 +54,108 @@ def separate_values(logexp, debug=False):
 #    operators = re.findall('[A-Z]',nlogexp)
 
     return subexps
+
+def infix_to_prefix(e):
+    "Translates an infix string to a postfix list"
+#   a&b: [a,&,b] -> [a,b,&]
+#   a|!c: [a,|,!,c]  -> [a,c,!,|]
+#   
+# Basic Idea:
+#   expr = 'a&b'
+#   ops = ['&','|','!']
+#   temp = []
+#   for x in expr:
+#       if x in ops:
+#           temp.append(x)
+
+    bin_ops = ['|','&']
+    un_ops = ['!']
+    operands = []
+    op = None
+
+    prefix = []
+    temp = []
+
+    for i in range(len(e)):
+        if e[i] in bin_ops and len(temp) != 0:
+            prefix.append(e[i])
+            prefix += temp
+            temp = []
+        elif i == len(e) - 1:
+            temp.append(e[i])
+            prefix += temp
+        elif e[i] == '(':
+            # call infix_to_prefix on what's in (...)
+            print "*** Not yet allowed"
+            return None
+        else:
+            temp.append(e[i])
+
+    prefix.reverse()
+
+    return prefix
+
+#    for x in e:
+#        if x in bin_ops:
+#            op = x
+#        else:
+#            operands.append(x)
+#
+#    operands.append(op) # In potfix notation
+#    return operands
+# def infix_to_prefix(e)
+#   if len(e) == 1:
+#       return e
+#   else:
+#       
+
+def postfix_exec(e, debug=False):
+    '''
+        Take in expression of the form [True,False,'|'] = F|T and evaluate it
+    '''
+
+
+    stack = []
+    bin_ops = ['&', '|']    # binary operators
+    un_ops = ['!']          # unary operators
+
+    for x in e:
+        if x not in bin_ops and x not in un_ops:
+            stack.append(x)
+            if debug: print "Stack = ",stack
+        else:
+            if len(stack) == 2: # if binary operator
+                second = stack.pop()
+                first = stack.pop()
+                if x == '&':
+                    result = np.logical_and(first,second)
+                    if debug: print "in &"
+                elif x == '|':
+                    result = np.logical_or(first,second)
+                    if debug: print "first = %s, second = %s, f|s = %s" % (first, second, np.logical_or(first,second))
+                    if debug: print "in |, result = %s" % result
+                else:
+                    print "*** Error, neither & nor | was in the expression"
+                    break
+                stack.append(result)
+            elif len(stack) == 1: # if unary operator
+                first = stack.pop()
+                result = np.logical_not(first)
+                stack.append(result)
+            else:
+                print "*** Error, stack is empty."
+    
+    if debug: print "Final result: postfix(%s) = %s" % (e, stack)
+
+    if len(stack) == 1:
+        return stack[0]
+    else:
+        print "*** Error: stack is empty, no value is being returned"
+        return None
+
+def translate_to_forumula(logexp):
+    # Need this?
+    return True
 
 def make_truth_table(values):
 
@@ -106,16 +208,12 @@ def get_TF_from_string(num,length):
 
     return bin_num
 
-def translate_to_forumula(logexp):
-    # Need this?
-    return True
-
 def help():
     print r'This script takes in a logical expression and outputs it\'s truth table'
     print r'Dictionary:'
     print r'    & = AND/^'
     print r'    | = OR/v'
-    print r'    ~ = NOT'
+    print r'    ! = NOT'
 
     return True
 
@@ -128,6 +226,24 @@ def TF_gen_test(n):
         tvals[ncombos - i - 1] = [int(x) for x in np.binary_repr(i,n)]
 
     print tvals
+
+
+
+if  __name__ == '__main__':
+
+    print "Passed test? %s" % test()
+
+    logexp = raw_input("Enter a logical expression (e.g., q&!p -- q or NOT p): ")
+
+    if logexp == '':
+        logexp = 'p|q'
+        print "\n*** No expression entered. Using sample input ", logexp, "\n"
+
+    vals = separate_values(logexp) # Separate into sub expressions
+    make_truth_table(vals) # evaluate sub expressions and full expression
+
+# Look into tokenization? https://docs.python.org/2/library/tokenize.html
+
 
 def test():
     # Separate values tests
@@ -156,12 +272,13 @@ def test():
     assert postfix_exec([False,True,'|']) == True
     assert postfix_exec([False,False,'|']) == False
 
-    assert postfix_exec([True,True,'&']) == True
-    assert postfix_exec([True,False,'&']) == False
-    assert postfix_exec([False,True,'&']) == False
-    assert postfix_exec([False,False,'&']) == False
+    assert postfix_exec([True,True,'&']) == True        # Evaluate T & T
+    assert postfix_exec([True,False,'&']) == False      # Evaluate T & F
+    assert postfix_exec([False,True,'&']) == False      # Evaluate F & T
+    assert postfix_exec([False,False,'&']) == False     # Evaluate F & F
 
-    assert postfix_exec([True,'!',False,'|']) == False
+    assert postfix_exec([True,'!',False,'|']) == False  # Evaluate Not T | False
+    assert postfix_exec([False,'!',True,'|']) == True  # Evaluate Not T | False
 
     # infix_to_prefix()
     assert infix_to_prefix('a|b') == ['|','a','b']
@@ -171,114 +288,4 @@ def test():
     assert infix_to_prefix('a&!b') == ['&','a','!','b']
     
     return True
-
-if  __name__ == '__main__':
-
-    print "Passed test? %s" % test()
-
-    logexp = raw_input("Enter a logical expression (e.g., q&!p -- q or NOT p): ")
-
-    if logexp == '':
-        logexp = 'p|q'
-        print "\n*** No expression entered. Using sample input ", logexp, "\n"
-
-    vals = separate_values(logexp) # Separate into sub expressions
-    make_truth_table(vals) # evaluate sub expressions and full expression
-
-
-# Take in expression, break up using list(expr)
-# 
-# e = ['a', '&', 'b'] translate to ['&','a','b']
-def infix_to_prefix(e):
-    "Translates an infix string to a postfix list"
-#   a&b: [a,&,b] -> [a,b,&]
-#   a|!c: [a,|,!,c]  -> [a,c,!,|]
-#   
-# Basic Idea:
-#   expr = 'a&b'
-#   ops = ['&','|','!']
-#   temp = []
-#   for x in expr:
-#       if x in ops:
-#           temp.append(x)
-
-    bin_ops = ['|','&']
-    un_ops = ['!']
-    operands = []
-    op = None
-
-    prefix = []
-    temp = []
-
-    for i in range(len(e)):
-        if e[i] in bin_ops and len(temp) != 0:
-            prefix.append(e[i])
-            prefix += temp
-            temp = []
-        elif i == len(e) - 1:
-            temp.append(e[i])
-            prefix += temp
-        else:
-            temp.append(e[i])
-    
-    return prefix
-
-#    for x in e:
-#        if x in bin_ops:
-#            op = x
-#        else:
-#            operands.append(x)
-#
-#    operands.append(op) # In potfix notation
-#    return operands
-# def infix_to_prefix(e)
-#   if len(e) == 1:
-#       return e
-#   else:
-#       
-
-def postfix_exec(e, debug=False):
-    "Take in broken up expression (list(expr)) in postfix order, and evaluate it as T/F"
-    stack = []
-    bin_ops = ['&', '|']    # binary operators
-    un_ops = ['!']          # unary operators
-
-    for x in e:
-        if x not in bin_ops and x not in un_ops:
-            stack.append(x)
-            if debug: print "Stack = ",stack
-        else:
-            if len(stack) == 2: # if binary operator
-                second = stack.pop()
-                first = stack.pop()
-                if x == '&':
-                    result = np.logical_and(first,second)
-                    if debug: print "in &"
-                elif x == '|':
-                    result = np.logical_or(first,second)
-                    if debug: print "first = %s, second = %s, f|s = %s" % (first, second, np.logical_or(first,second))
-                    if debug: print "in |, result = %s" % result
-                else:
-                    print "*** Error, neither & nor | was in the expression"
-                    break
-                stack.append(result)
-            elif len(stack) == 1: # if unary operator
-                first = stack.pop()
-                result = np.logical_not(first)
-                stack.append(result)
-            else:
-                print "*** Error, stack is empty."
-    
-    if debug: print "Final result: postfix(%s) = %s" % (e, stack)
-
-    if len(stack) == 1:
-        return stack[0]
-    else:
-        print "*** Error: stack is empty, no value is being returned"
-        return None
-
-# Look into tokenization? https://docs.python.org/2/library/tokenize.html
-
-
-
 
