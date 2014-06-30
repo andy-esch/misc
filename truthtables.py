@@ -1,6 +1,7 @@
 '''
 truthtables.py
-This script turns a logical expression written in the form a,b,c,... = T/F (binary) variable, and ^ = AND, v = OR, ~ = NOT, X = XOR, etc.
+This script turns a logical expression written in the form a,b,c,... = T/F (binary) 
+variable, and & = AND, v = OR, ~ = NOT, X = XOR, etc.
 
 '''
 
@@ -9,9 +10,9 @@ import re
 
 def take_input():
     '''
-    Take in logical expression of format 'qv(p^r)'
+    Take in logical expression of format 'q|(p&r)'
     '''
-    print "Enter your logical expression below. Example: pv~q"
+    print "Enter your logical expression below. Example: p|!q"
     logical_exp = raw_input("Enter logical expression (i.e., p|q): ")
     print "Your logical expression is \'%s\'" % logical_exp
 
@@ -22,8 +23,8 @@ def separate_values(logexp, debug=False):
     nlogexp = logexp
 
     # Convert operators to more usable forms
-    nlogexp = re.sub('\^','A',nlogexp)  # AND
-    nlogexp = re.sub('|','O',nlogexp)   # OR
+    nlogexp = re.sub('\&','A',nlogexp)  # AND
+    nlogexp = re.sub('\|','O',nlogexp)   # OR
     nlogexp = re.sub('!','N',nlogexp)   # NOT
     nlogexp = re.sub('X','X',nlogexp)   # XOR
     if debug:
@@ -59,7 +60,7 @@ def make_truth_table(values):
     # find out the number of variables
     cnt = len([1 for x in values if len(x) == 1])
 
-    # find out the number of combinations. E.g., p^q -> N{p,q,p^q} = 3, p^~q -> N{p,q,~q,p^~q} = 4, etc.
+    # find out the number of combinations. E.g., p&q -> N{p,q,p&q} = 3, p&~q -> N{p,q,~q,p&~q} = 4, etc.
     numcombos = len(values)
 
     # Create variables
@@ -131,12 +132,12 @@ def TF_gen_test(n):
 def test():
     # Separate values tests
     assert separate_values('a') == ['a']
-    assert separate_values('~b') == ['b','Nb']
-    assert separate_values('a^b') == ['a','b','aAb']
-    assert separate_values('avb') == ['a','b','aOb']
-    assert separate_values('a^~b') == ['a','b','Nb','aANb']
-    assert separate_values('av~b') == ['a','b','Nb','aONb']
-    assert separate_values('(pvq)^(w^x)') == ['p', 'q', 'w', 'x', 'pOq', 'wAx','(pOq)A(wAx)']
+    assert separate_values('!b') == ['b','Nb']
+    assert separate_values('a&b') == ['a','b','aAb']
+    assert separate_values('a|b') == ['a','b','aOb']
+    assert separate_values('a&!b') == ['a','b','Nb','aANb']
+    assert separate_values('a|!b') == ['a','b','Nb','aONb']
+    assert separate_values('(p|q)&(w&x)') == ['p', 'q', 'w', 'x', 'pOq', 'wAx','(pOq)A(wAx)']
 
     # Test 
     assert get_TF_from_string(0,1) ==    'F'
@@ -148,17 +149,30 @@ def test():
     assert get_TF_from_string(6,3) ==  'TTF'
     assert get_TF_from_string(7,3) ==  'TTT'
     assert get_TF_from_string(8,4) == 'TFFF'
+    
+    # postfix_exec(tests)
+    assert postfix_exec([True,True,'|']) == True
+    assert postfix_exec([True,False,'|']) == True
+    assert postfix_exec([False,True,'|']) == True
+    assert postfix_exec([False,False,'|']) == False
 
+    assert postfix_exec([True,True,'&']) == True
+    assert postfix_exec([True,False,'&']) == False
+    assert postfix_exec([False,True,'&']) == False
+    assert postfix_exec([False,False,'&']) == False
+
+    assert postfix_exec(['!',True,False,'|']) == False
+        
     return True
 
 if  __name__ == '__main__':
 
     print "Passed test? %s" % test()
 
-    logexp = raw_input("Enter a logical expression (e.g., q^~p -- q or NOT p): ")
+    logexp = raw_input("Enter a logical expression (e.g., q&!p -- q or NOT p): ")
 
     if logexp == '':
-        logexp = 'pvq'
+        logexp = 'p|q'
         print "\n*** No expression entered. Using sample input ", logexp, "\n"
 
     vals = separate_values(logexp) # Separate into sub expressions
@@ -167,13 +181,14 @@ if  __name__ == '__main__':
 
 # Take in expression, break up using list(expr)
 # 
-# e = ['a', '^', 'b'] translate to ['^','a','b']
+# e = ['a', '&', 'b'] translate to ['&','a','b']
 def infix_to_postfix(e):
-    "Translates an infix string to a prefix string"
-#   a^b: [a,^,b] -> [^,a,b]
-#   a|!c: [a,|,!,c]  -> [|,a,!,c]
+    "Translates an infix string to a postfix list"
+#   a&b: [a,&,b] -> [a,b,&]
+#   a|!c: [a,|,!,c]  -> [a,c,!,|]
 #   
-    bin_ops = ['^','&']
+    bin_ops = ['|','&']
+    un_ops = ['!']
     operands = []
     op = None
 
@@ -186,42 +201,32 @@ def infix_to_postfix(e):
     operands.append(op) # In potfix notation
     return operands
 
-#
-# ops = None
-#
-# operands = ['^','&']
-# for x in e:
-#    if x in ops:
-#       op = x
-#   else:
-#       operands.append(x)
-
-# prefix notation: a^b --> [^,a,b]
-# postfix: [a,b,^]
-# infix: [a,^,b]
-# http://en.wikipedia.org/wiki/Reverse_Polish_notation#Postfix_algorithm
-
-def postfix_exec(e):
+def postfix_exec(e, debug=False):
+    "Take in broken up expression (list(expr)) in postfix order, and evaluate it as T/F"
     stack = []
-    bin_ops = ['&', '|']
-    un_ops = ['!']
+    bin_ops = ['&', '|']    # binary operators
+    un_ops = ['!']          # unary operators
 
     for x in e:
         if x not in bin_ops and x not in un_ops:
             stack.append(x)
-            print "Stack = ",stack
+            if debug: print "Stack = ",stack
         else:
-            if len(stack) == 2:
+            if len(stack) == 2: # if binary operator
                 second = stack.pop()
                 first = stack.pop()
-                if x == '^':
+                if x == '&':
                     result = np.logical_and(first,second)
+                    if debug: print "in &"
                 elif x == '|':
                     result = np.logical_or(first,second)
+                    if debug: print "first = %s, second = %s, f|s = %s" % (first, second, np.logical_or(first,second))
+                    if debug: print "in |, result = %s" % result
                 else:
                     print "*** Error, neither & nor | was in the expression"
+                    break
                 stack.append(result)
-            elif len(stack) == 1:
+            elif len(stack) == 1: # if unary operator
                 first = stack.pop()
                 result = np.logical_not(first)
                 stack.append(result)
@@ -229,7 +234,8 @@ def postfix_exec(e):
             else:
                 print "*** Error, stack is empty."
     
-    print "Final result: postfix(%s) = %s" % (e, stack)
+    if debug: print "Final result: postfix(%s) = %s" % (e, stack)
+    return stack[0]
 # 
 
 
