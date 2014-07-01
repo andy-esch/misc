@@ -56,23 +56,14 @@ def separate_values(logexp, debug=False):
     return subexps
 
 def infix_to_prefix(e):
-    "Translates an infix string to a postfix list"
-#   a&b: [a,&,b] -> [a,b,&]
-#   a|!c: [a,|,!,c]  -> [a,c,!,|]
-#   
-# Basic Idea:
-#   expr = 'a&b'
-#   ops = ['&','|','!']
-#   temp = []
-#   for x in expr:
-#       if x in ops:
-#           temp.append(x)
+    '''
+    Translates an infix string to a prefix list
+    a&b   -->  [&,a,b]
+    a|!c  -->  [|,a,!,c]
+    '''
 
     bin_ops = ['|','&']
     un_ops = ['!']
-    operands = []
-    op = None
-
     prefix = []
     temp = []
 
@@ -85,13 +76,12 @@ def infix_to_prefix(e):
             temp.append(e[i])
             prefix += temp
         elif e[i] == '(':
-            # call infix_to_prefix on what's in (...)
-            print "*** Not yet allowed"
-            return None
+            j = e.index(')')
+            prefix += infix_to_prefix(e[i+1:j])
+            if (j + 1) == len(e):
+                break;
         else:
             temp.append(e[i])
-
-    prefix.reverse()
 
     return prefix
 
@@ -112,6 +102,7 @@ def infix_to_prefix(e):
 def postfix_exec(e, debug=False):
     '''
         Take in expression of the form [True,False,'|'] = F|T and evaluate it
+        Returned: bool, answer of logical expression
     '''
 
 
@@ -281,11 +272,14 @@ def test():
     assert postfix_exec([False,'!',True,'|']) == True  # Evaluate Not T | False
 
     # infix_to_prefix()
+    assert infix_to_prefix('a') == ['a']
+    assert infix_to_prefix('!a') == ['!','a']
     assert infix_to_prefix('a|b') == ['|','a','b']
     assert infix_to_prefix('a&b') == ['&','a','b']
     assert infix_to_prefix('!a|b') == ['|','!','a','b']
     assert infix_to_prefix('a|!b') == ['|','a','!','b']
     assert infix_to_prefix('a&!b') == ['&','a','!','b']
+    assert infix_to_prefix('a|(b&c)') == ['|','a','&','b','c']
     
     return True
 
