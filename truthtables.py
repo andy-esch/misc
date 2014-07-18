@@ -75,6 +75,7 @@ def infix_to_prefix(e):
         elif i == len(e) - 1:
             temp.append(e[i])
             prefix += temp
+            temp = []
         elif e[i] == '(':
             j = e.index(')')
             prefix += infix_to_prefix(e[i+1:j])
@@ -85,27 +86,28 @@ def infix_to_prefix(e):
 
     return prefix
 
-#    for x in e:
-#        if x in bin_ops:
-#            op = x
-#        else:
-#            operands.append(x)
-#
-#    operands.append(op) # In potfix notation
-#    return operands
+def infix_to_postfix(e):
+   for x in e:
+       if x in bin_ops:
+           op = x
+       else:
+           operands.append(x)
+
+   operands.append(op) # In postfix notation
+   return operands
+
 # def infix_to_prefix(e)
 #   if len(e) == 1:
 #       return e
 #   else:
 #       
 
+
 def postfix_exec(e, debug=False):
     '''
-        Take in expression of the form [True,False,'|'] = F|T and evaluate it
-        Returned: bool, answer of logical expression
+    Take in expression of the form [True,False,'|'] = F|T and evaluate it
+    Returned: bool, answer of logical expression
     '''
-
-
     stack = []
     bin_ops = ['&', '|']    # binary operators
     un_ops = ['!']          # unary operators
@@ -208,33 +210,15 @@ def help():
 
     return True
 
-def TF_gen_test(n):
-    ncombos = 2**n
-    # Create matrix of proper size
-    tvals = np.zeros((ncomb,n), dtype=bool)
-
-    for i in (np.arange(ncombos,0,-1)-1):
-        tvals[ncombos - i - 1] = [int(x) for x in np.binary_repr(i,n)]
-
-    print tvals
-
-
-
-if  __name__ == '__main__':
-
-    print "Passed test? %s" % test()
-
-    logexp = raw_input("Enter a logical expression (e.g., q&!p -- q or NOT p): ")
-
-    if logexp == '':
-        logexp = 'p|q'
-        print "\n*** No expression entered. Using sample input ", logexp, "\n"
-
-    vals = separate_values(logexp) # Separate into sub expressions
-    make_truth_table(vals) # evaluate sub expressions and full expression
-
-# Look into tokenization? https://docs.python.org/2/library/tokenize.html
-
+# def TF_gen_test(n):
+#     ncombos = 2**n
+#     # Create matrix of proper size
+#     tvals = np.zeros((ncomb,n), dtype=bool)
+#
+#     for i in (np.arange(ncombos,0,-1)-1):
+#         tvals[ncombos - i - 1] = [int(x) for x in np.binary_repr(i,n)]
+#
+#     print tvals
 
 def test():
     # Separate values tests
@@ -258,18 +242,18 @@ def test():
     assert get_TF_from_string(8,4) == 'TFFF'
     
     # postfix_exec(tests)
-    assert postfix_exec([True,True,'|']) == True
-    assert postfix_exec([True,False,'|']) == True
-    assert postfix_exec([False,True,'|']) == True
-    assert postfix_exec([False,False,'|']) == False
+    assert postfix_exec([True,True,'|']) == True         # Evaluate T | T
+    assert postfix_exec([True,False,'|']) == True        # Evaluate T | F
+    assert postfix_exec([False,True,'|']) == True        # Evaluate F | T
+    assert postfix_exec([False,False,'|']) == False      # Evaluate F | F
 
-    assert postfix_exec([True,True,'&']) == True        # Evaluate T & T
-    assert postfix_exec([True,False,'&']) == False      # Evaluate T & F
-    assert postfix_exec([False,True,'&']) == False      # Evaluate F & T
-    assert postfix_exec([False,False,'&']) == False     # Evaluate F & F
+    assert postfix_exec([True,True,'&']) == True         # Evaluate T & T
+    assert postfix_exec([True,False,'&']) == False       # Evaluate T & F
+    assert postfix_exec([False,True,'&']) == False       # Evaluate F & T
+    assert postfix_exec([False,False,'&']) == False      # Evaluate F & F
 
-    assert postfix_exec([True,'!',False,'|']) == False  # Evaluate Not T | False
-    assert postfix_exec([False,'!',True,'|']) == True  # Evaluate Not T | False
+    assert postfix_exec([True,'!',False,'|']) == False   # Evaluate Not T | False
+    assert postfix_exec([False,'!',True,'|']) == True    # Evaluate Not F | True
 
     # infix_to_prefix()
     assert infix_to_prefix('a') == ['a']
@@ -281,5 +265,69 @@ def test():
     assert infix_to_prefix('a&!b') == ['&','a','!','b']
     assert infix_to_prefix('a|(b&c)') == ['|','a','&','b','c']
     
+    # shunting_yard()
+    assert shunting_yard('a|b') == ['a','b','|']
+    assert shunting_yard('c&d') == ['c','d','&']
+    
     return True
 
+def shunting_yard(e):
+    '''
+    Implementation of Shunting-Yard Algorithm
+    http://en.wikipedia.org/wiki/Shunting-yard_algorithm
+    ?--v
+    http://en.wikipedia.org/wiki/Abstract_syntax_tree
+    '''
+
+    ops = {
+        '|': 'B',
+        '&': 'B',
+        '!': 'U'
+        }
+    parens = {
+        '(': 'B',
+        ')': 'B'
+    }
+
+    out_queue = []
+    op_stack = []
+    op = None
+
+    for x in e:
+        if x not in ops.keys() and x not in parens.keys():
+            out_queue.append(x)
+            if op is not None:
+                out_queue.append(op)
+                op = None
+        elif x is '(':
+            op_stack.append(x)
+        elif x is ')':
+            op = op_stack.pop()
+            while op != '(':
+                out_queue.append(op)
+                op = op_stack.pop()
+            op = None
+        elif ops[x] is 'U':
+            op = x
+        else:
+            op_stack.append(x)
+
+    while len(op_stack) > 0:
+        out_queue.append(op_stack.pop())
+
+    return out_queue
+
+if  __name__ == '__main__':
+
+    print "Passed test? %s" % test()
+
+    logexp = raw_input("Enter a logical expression (e.g., q&!p -- q or NOT p): ")
+
+    if logexp == '':
+        logexp = 'p|q'
+        print "\n*** No expression entered. Using sample input ", logexp, "\n"
+
+    vals = separate_values(logexp) # Separate into sub expressions
+    make_truth_table(vals) # evaluate sub expressions and full expression
+
+# Look into tokenization? https://docs.python.org/2/library/tokenize.html
