@@ -1,7 +1,13 @@
 #!/bin/sh
 
 # Checks MacPorts for currently installed ports that have available upgrades
-
+# To do:
+#	Add extensibility for gem update
+# 	Add extensibility for npm updates?
+#	Add extensibility for go update?
+#	Rename
+#	Add option to show svn changes (call ~/bin/whatsnew)
+#
 # v1.2.1
 #  Added check if last run file exists
 # v1.2.0
