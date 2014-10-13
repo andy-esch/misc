@@ -10,18 +10,22 @@
                 attribution: 'OpenStreetMap'
                 }).addTo(map);
 
-            var vizjsons = [
-                'http://documentation.cartodb.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json',
-                'http://documentation.cartodb.com/api/v2/viz/236085de-ea08-11e2-958c-5404a6a683d5/viz.json'
-                ]
+            vzj = 'http://documentation.cartodb.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json';
 
-            vizjsons.forEach(function(vizjson, index) {
-                cartodb.createLayer(map, vizjson)
-                    .addTo(map)
-                    .done(function(layer) {
-                        alert("Congrats, you added vizjson #" + (index+1));
-                    })
-                    .error(function(err) {
-                        console.log("error: " + err + " for layer " + index);
-                    });
-                });
+
+            cartodb.createLayer(map,vzj);
+            // var vizjsons = [
+            //     'http://documentation.cartodb.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json',
+            //     'http://documentation.cartodb.com/api/v2/viz/236085de-ea08-11e2-958c-5404a6a683d5/viz.json'
+            //     ]
+
+            // vizjsons.forEach(function(vizjson, index) {
+            //     cartodb.createLayer(map, vizjson)
+            //         .addTo(map)
+            //         .done(function(layer) {
+            //             alert("Congrats, you added vizjson #" + (index+1));
+            //         })
+            //         .error(function(err) {
+            //             console.log("error: " + err + " for layer " + index);
+            //         });
+            //     });
