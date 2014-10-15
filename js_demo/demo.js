@@ -13,7 +13,7 @@
             vzj = 'http://documentation.cartodb.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json';
 
 
-            cartodb.createLayer(map,vzj);
+            cartodb.createLayer(map,vzj).addTo(map);
             // var vizjsons = [
             //     'http://documentation.cartodb.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json',
             //     'http://documentation.cartodb.com/api/v2/viz/236085de-ea08-11e2-958c-5404a6a683d5/viz.json'
