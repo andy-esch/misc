@@ -1,16 +1,19 @@
-// Create map object with Leaflet
-var map = new L.Map('map', {
-    zoomControl: false,
-    center: [43,0], // Southern France
-    zoom: 5
-});
-            
-// Add OpenStreetMap tiles
-L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'OpenStreetMap'
-    }).addTo(map);
+var vizjson_url = 'http://documentation.cartodb.com/api/v2/viz/23f2abd6-481b-11e4-8fb1-0e4fddd5de28/viz.json';
 
-vzj = 'http://documentation.cartodb.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json';
+// Choose center and zoom level
+var options = {
+            center: [41.8369, -87.6847], // Chicago
+            zoom: 7
+        }
 
-cartodb.createLayer(map,vzj).addTo(map);
+// Instantiate map on specified DOM element
+var map_object = new L.Map(dom_id, options);
 
+// Add a basemap to the map object just created
+L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
+    attribution: 'Stamen'
+    }).addTo(map_object);
+
+// Add CartoDB data layers
+cartodb.createLayer(map_object,vizjson_url)
+    .addTo(map);

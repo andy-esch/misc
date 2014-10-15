@@ -1,6 +1,6 @@
 ---
- name: First CartoDB.js JS Fiddle Demo using GitHub
- description: Testing out multilayer on JS Fiddle from GitHub
+ name: CartoDB.js Lesson 2 
+ description: First maps
  authors:
    - Andy Eschbacher
  resources:
