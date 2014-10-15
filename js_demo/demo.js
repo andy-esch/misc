@@ -7,7 +7,7 @@ var options = {
         }
 
 // Instantiate map on specified DOM element
-var map_object = new L.Map(dom_id, options);
+var map_object = new L.Map('map', options);
 
 // Add a basemap to the map object just created
 L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
