@@ -1,4 +1,4 @@
-var vizjson_url = 'http://documentation.cartodb.com/api/v2/viz/23f2abd6-481b-11e4-8fb1-0e4fddd5de28/viz.json';
+var vizjson = 'http://documentation.cartodb.com/api/v2/viz/23f2abd6-481b-11e4-8fb1-0e4fddd5de28/viz.json';
 
 // Choose center and zoom level
 var options = {
@@ -15,5 +15,5 @@ L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
     }).addTo(map_object);
 
 // Add CartoDB data layers
-cartodb.createLayer(map_object,vizjson_url)
-    .addTo(map);
+cartodb.createLayer(map_object,vizjson)
+    .addTo(map_object);
