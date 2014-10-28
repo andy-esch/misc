@@ -1,14 +1,10 @@
 ---
- name: CartoDB.js Lesson 2 
- description: Opacity Slider and Layer Toggles
+ name: CartoDB.js Lesson 1 
+ description: First map using createLayer
  authors:
    - Andy Eschbacher
  resources:
-   - http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css
-   - http://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css
    - http://libs.cartocdn.com/cartodb.js/v3/cartodb.js
-   - http://code.jquery.com/jquery-1.10.2.js
-   - http://code.jquery.com/ui/1.11.1/jquery-ui.js
+   - http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css
  normalize_css: no
- wrap: l
  ...
