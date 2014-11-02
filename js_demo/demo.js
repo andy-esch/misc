@@ -1,4 +1,6 @@
 window.onload = function() {
+    cdb.init(function() {
+
         // Instantiate new map object, place it in 'map' element
         var map_object = new L.Map('map', {
             center: [43,0], // Southern France
@@ -34,25 +36,7 @@ window.onload = function() {
                for (var i = 0; i < layer.getSubLayerCount(); i++) {
                    sublayers[i] = layer.getSubLayer(i);
                    alert("Congrats, you added sublayer #" + i + "!");
-               }
-               var op = 0.7;
-               layer.setOpacity(op);
-
-               $(function() {
-                   $( "#slider-range-min" ).slider({
-                     range: "min",
-                     value: 70,
-                     min: 0,
-                     max: 100,
-                     slide: function( event, ui ) {
-                       $( "#amount" ).val(ui.value + "%" );
-                       // scale to [0,1] from [0,100]
-                       op = $( "#slider-range-min" ).slider( "value" ) / 100;
-                       layer.setOpacity(op);
-                     }
-                   });
-                   $( "#amount" ).val( $( "#slider-range-min" ).slider( "value" ) + "%");
-                 });
+               } 
             })
             .error(function(err) {
                 console.log("error: " + err);
@@ -76,4 +60,6 @@ window.onload = function() {
                 sublayers[1].show();
             }
             sublayer1Shown = !sublayer1Shown; 
+        });
     });
+}
