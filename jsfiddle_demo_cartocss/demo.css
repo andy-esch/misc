@@ -1,7 +1,13 @@
-html, body, #map {
+html, body {
     height: 100%;
     padding: 0;
     margin: 0;
+}
+#map {
+    height: 480px;
+    width: 480px;
+    border: 1px solid black;
+    margin: auto;
 }
 #cartocss {
     position: absolute;
